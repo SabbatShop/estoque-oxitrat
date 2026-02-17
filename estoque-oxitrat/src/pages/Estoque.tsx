@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { Package, Pencil, Trash2, X } from 'lucide-react';
 
 interface MateriaPrima {
   id: string;
@@ -15,13 +16,13 @@ export function Estoque() {
   const [estoque, setEstoque] = useState<MateriaPrima[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Formulário
+  // Formulário de Criação
   const [nome, setNome] = useState('');
   const [massa, setMassa] = useState<number | ''>('');
   const [densidade, setDensidade] = useState<number | ''>('');
   const [preco, setPreco] = useState<number | ''>('');
 
-  // Edição
+  // Estados de Edição (Modal)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [editNome, setEditNome] = useState('');
@@ -32,111 +33,258 @@ export function Estoque() {
   useEffect(() => { buscarDados(); }, []);
 
   async function buscarDados() {
-    const { data } = await supabase.from('estoque').select('*').order('created_at', { ascending: false });
+    const { data } = await supabase
+      .from('estoque')
+      .select('*')
+      .order('created_at', { ascending: false });
     if (data) setEstoque(data);
   }
 
   const handleEntrada = async () => {
-    if (!nome || !massa || !densidade || !preco) return alert("Preencha tudo!");
+    if (!nome || !massa || !densidade || !preco) return alert("Preencha todos os campos!");
     setLoading(true);
+    
     const massaNum = Number(massa);
     const densidadeNum = Number(densidade);
+    
+    // Evitar divisão por zero
+    const volumeCalc = densidadeNum > 0 ? massaNum / densidadeNum : 0;
+
     const { error } = await supabase.from('estoque').insert([{
-      nome, massa: massaNum, densidade: densidadeNum, volume: massaNum / densidadeNum, preco: Number(preco)
+      nome, 
+      massa: massaNum, 
+      densidade: densidadeNum, 
+      volume: volumeCalc, 
+      preco: Number(preco)
     }]);
-    if (error) alert(error.message);
-    else { setNome(''); setMassa(''); setDensidade(''); setPreco(''); buscarDados(); }
+
+    if (error) {
+      alert(error.message);
+    } else { 
+      setNome(''); setMassa(''); setDensidade(''); setPreco(''); 
+      buscarDados(); 
+    }
     setLoading(false);
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Excluir item?")) {
+    if (confirm("Tem certeza que deseja excluir este item?")) {
       await supabase.from('estoque').delete().eq('id', id);
       buscarDados();
     }
   };
 
+  const openEdit = (item: MateriaPrima) => {
+    setEditId(item.id);
+    setEditNome(item.nome);
+    setEditMassa(item.massa);
+    setEditDensidade(item.densidade);
+    setEditPreco(item.preco);
+    setIsModalOpen(true);
+  }
+
   const handleUpdate = async () => {
     if (!editId) return;
     const m = Number(editMassa);
     const d = Number(editDensidade);
-    await supabase.from('estoque').update({
-      nome: editNome, massa: m, densidade: d, volume: m/d, preco: Number(editPreco)
+    const v = d > 0 ? m / d : 0;
+
+    const { error } = await supabase.from('estoque').update({
+      nome: editNome, 
+      massa: m, 
+      densidade: d, 
+      volume: v, 
+      preco: Number(editPreco)
     }).eq('id', editId);
-    setIsModalOpen(false);
-    buscarDados();
+
+    if (!error) {
+      setIsModalOpen(false);
+      buscarDados();
+    } else {
+      alert("Erro ao atualizar: " + error.message);
+    }
   };
 
-  const openEdit = (item: MateriaPrima) => {
-    setEditId(item.id); setEditNome(item.nome); setEditMassa(item.massa);
-    setEditDensidade(item.densidade); setEditPreco(item.preco); setIsModalOpen(true);
-  }
+  // Cálculo visual do volume no modal
+  const editVolumePreview = (Number(editMassa) > 0 && Number(editDensidade) > 0) 
+    ? (Number(editMassa) / Number(editDensidade)).toFixed(2) 
+    : '--';
 
   return (
     <div className="page-container">
       <header className="page-header">
         <h2>Controle de Matéria-Prima</h2>
+        <p>Gerencie o estoque, densidade e custos.</p>
       </header>
       
       <div className="content-grid">
-        {/* Formulário */}
+        {/* Formulário de Adição */}
         <div className="card form-section">
-          <h3>Nova Entrada</h3>
+          <h3><Package size={18} style={{marginRight:8}}/> Nova Entrada</h3>
+          
           <div className="form-group">
-            <label>Produto</label>
-            <input type="text" value={nome} onChange={e => setNome(e.target.value)} placeholder="Nome..." />
+            <label>Nome do Produto</label>
+            <input 
+              type="text" 
+              value={nome} 
+              onChange={e => setNome(e.target.value)} 
+              placeholder="Ex: Ácido Sulfúrico" 
+            />
           </div>
+
           <div className="row-2">
-            <div><label>Massa (kg)</label><input type="number" value={massa} onChange={e => setMassa(Number(e.target.value))} /></div>
-            <div><label>Densidade</label><input type="number" value={densidade} onChange={e => setDensidade(Number(e.target.value))} /></div>
+            <div className="form-group">
+              <label>Massa (kg)</label>
+              <input 
+                type="number" 
+                value={massa} 
+                onChange={e => setMassa(Number(e.target.value))} 
+                placeholder="0.00"
+              />
+            </div>
+            <div className="form-group">
+              <label>Densidade</label>
+              <input 
+                type="number" 
+                value={densidade} 
+                onChange={e => setDensidade(Number(e.target.value))} 
+                placeholder="0.00"
+              />
+            </div>
           </div>
-          <div><label>Custo (R$)</label><input type="number" value={preco} onChange={e => setPreco(Number(e.target.value))} /></div>
-          <button className="btn-primary" onClick={handleEntrada} disabled={loading}>{loading ? '...' : 'Lançar'}</button>
+
+          <div className="form-group">
+            <label>Custo Total (R$)</label>
+            <input 
+              type="number" 
+              value={preco} 
+              onChange={e => setPreco(Number(e.target.value))} 
+              placeholder="0.00"
+            />
+          </div>
+
+          <button className="btn-primary" onClick={handleEntrada} disabled={loading}>
+            {loading ? 'Processando...' : 'Adicionar ao Estoque'}
+          </button>
         </div>
 
-        {/* Tabela */}
+        {/* Tabela de Visualização */}
         <div className="card table-section">
+          <h3>Itens em Estoque</h3>
           <div className="table-responsive">
             <table>
               <thead>
                 <tr>
                   <th>Material</th>
-                  <th>Massa/Vol</th>
-                  <th>Custo</th>
-                  <th>Ações</th>
+                  <th>Massa (kg)</th>
+                  <th>Densidade</th>
+                  <th>Volume (L)</th>
+                  <th>Custo (R$)</th>
+                  <th style={{textAlign: 'center'}}>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {estoque.map(item => (
-                  <tr key={item.id}>
-                    <td><strong>{item.nome}</strong></td>
-                    <td>{item.massa}kg <br/><small>{item.volume.toFixed(1)}L</small></td>
-                    <td>R$ {item.preco?.toFixed(2)}</td>
-                    <td>
-                      <button className="btn-icon edit" onClick={() => openEdit(item)}>✎</button>
-                      <button className="btn-icon delete" onClick={() => handleDelete(item.id)}>✕</button>
+                {estoque.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{textAlign: 'center', color: '#999', padding: '20px'}}>
+                      Nenhum item cadastrado.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  estoque.map(item => (
+                    <tr key={item.id}>
+                      <td><strong>{item.nome}</strong></td>
+                      <td>{item.massa}</td>
+                      <td>{item.densidade}</td>
+                      <td style={{color: '#16a34a', fontWeight: 'bold'}}>
+                        {item.volume?.toFixed(2)}
+                      </td>
+                      <td>R$ {item.preco?.toFixed(2)}</td>
+                      <td style={{display: 'flex', gap: '8px', justifyContent: 'center'}}>
+                        <button className="btn-icon edit" onClick={() => openEdit(item)} title="Editar">
+                          <Pencil size={18} />
+                        </button>
+                        <button className="btn-icon delete" onClick={() => handleDelete(item.id)} title="Excluir">
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
+      {/* Modal de Edição */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3>Editar</h3>
-            <input type="text" value={editNome} onChange={e => setEditNome(e.target.value)} />
-            <div className="row-2">
-              <input type="number" value={editMassa} onChange={e => setEditMassa(Number(e.target.value))} placeholder="Kg" />
-              <input type="number" value={editDensidade} onChange={e => setEditDensidade(Number(e.target.value))} placeholder="Dens" />
+            <div style={{display:'flex', justifyContent:'space-between', marginBottom:'20px'}}>
+              <h3>Editar Item</h3>
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                style={{background:'none', border:'none', cursor:'pointer'}}
+              >
+                <X size={20} />
+              </button>
             </div>
-            <input type="number" value={editPreco} onChange={e => setEditPreco(Number(e.target.value))} placeholder="R$" />
+
+            <div className="form-group">
+              <label>Nome do Material</label>
+              <input 
+                type="text" 
+                value={editNome} 
+                onChange={e => setEditNome(e.target.value)} 
+              />
+            </div>
+
+            <div className="row-2">
+              <div className="form-group">
+                <label>Massa (Kg)</label>
+                <input 
+                  type="number" 
+                  value={editMassa} 
+                  onChange={e => setEditMassa(Number(e.target.value))} 
+                />
+              </div>
+              <div className="form-group">
+                <label>Densidade</label>
+                <input 
+                  type="number" 
+                  value={editDensidade} 
+                  onChange={e => setEditDensidade(Number(e.target.value))} 
+                />
+              </div>
+            </div>
+
+            <div style={{
+              background: '#f0fdf4', 
+              padding: '10px', 
+              borderRadius: '8px', 
+              marginBottom: '15px',
+              color: '#166534',
+              fontSize: '0.9rem',
+              textAlign: 'center'
+            }}>
+              Volume Recalculado: <strong>{editVolumePreview} Litros</strong>
+            </div>
+
+            <div className="form-group">
+              <label>Preço de Custo (R$)</label>
+              <input 
+                type="number" 
+                value={editPreco} 
+                onChange={e => setEditPreco(Number(e.target.value))} 
+              />
+            </div>
+
             <div className="modal-actions">
               <button onClick={() => setIsModalOpen(false)}>Cancelar</button>
-              <button className="btn-primary" onClick={handleUpdate}>Salvar</button>
+              <button className="btn-primary" onClick={handleUpdate} style={{marginTop:0}}>
+                Salvar Alterações
+              </button>
             </div>
           </div>
         </div>

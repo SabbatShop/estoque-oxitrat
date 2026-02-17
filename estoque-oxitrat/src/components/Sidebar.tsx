@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Users, Factory, ScrollText, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, Users, Factory, Menu, X } from 'lucide-react';
 import '../App.css';
 
 export function Sidebar() {
@@ -51,9 +51,6 @@ export function Sidebar() {
           
           <div className="nav-item disabled">
             <Factory size={20} /> <span>Produção</span>
-          </div>
-          <div className="nav-item disabled">
-            <ScrollText size={20} /> <span>Receitas</span>
           </div>
         </div>
       </nav>
