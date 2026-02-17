@@ -1,129 +1,124 @@
-.dashboard-container {
+:root {
+  --primary: #16a34a;
+  --bg: #f1f5f9;
+  --sidebar-bg: #1e293b;
+  --text-dark: #334155;
+  --white: #ffffff;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg);
+  color: var(--text-dark);
+}
+
+/* Layout Principal */
+.app-layout {
+  display: flex;
   min-height: 100vh;
+}
+
+.main-viewport {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background-color: var(--sidebar-bg);
+  color: white;
   display: flex;
   flex-direction: column;
-  background-color: #f8fafc;
-  font-family: sans-serif;
+  padding: 20px;
 }
 
-.header {
-  background: white;
-  border-bottom: 4px solid #16a34a;
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo-container { display: flex; align-items: center; gap: 10px; }
-.logo-square { background: #16a34a; color: white; padding: 8px 12px; border-radius: 8px; font-weight: bold; }
-
-.main-content {
-  display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 30px;
-  padding: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.form-card {
-  background: white;
-  border-radius: 15px;
-  padding: 25px;
-  border: 1px solid #e2e8f0;
-}
-
-.form-card h2 { font-size: 0.8rem; color: #64748b; text-transform: uppercase; margin-bottom: 20px; }
-
-.input-field { margin-bottom: 15px; }
-.input-field label { display: block; font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; color: #475569; }
-.input-field input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: #f1f5f9;
-  box-sizing: border-box;
-}
-
-.btn-primary {
-  width: 100%;
-  background: #16a34a;
+.logo-square {
+  background: var(--primary);
   color: white;
-  border: none;
-  padding: 15px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: bold; border-radius: 8px; margin-bottom: 10px;
 }
 
-.table-card { background: white; border-radius: 15px; border: 1px solid #e2e8f0; overflow: hidden; }
-.table-header { padding: 15px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-weight: bold; }
+.nav-links { display: flex; flex-direction: column; gap: 10px; margin-top: 40px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  color: #94a3b8; text-decoration: none;
+  padding: 12px; border-radius: 8px; transition: 0.2s;
+}
+.nav-item:hover, .nav-item.active { background: #334155; color: white; }
+.nav-item.disabled { opacity: 0.5; cursor: not-allowed; }
 
-table { width: 100%; border-collapse: collapse; }
-th { padding: 12px 20px; font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; text-align: left; }
-td { padding: 15px 20px; border-top: 1px solid #f1f5f9; font-size: 0.9rem; }
-.volume-badge { background: #f0fdf4; color: #16a34a; padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #bbf7d0; }
-
-/* ... (mantenha o código anterior) ... */
-
-/* Estilos do Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+/* Grids e Cards */
+.page-header { margin-bottom: 20px; }
+.content-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr; /* Form fixo, tabela flexível */
+  gap: 20px;
+  align-items: start;
 }
 
-.modal-content {
-  background: white;
-  padding: 25px;
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--white);
+  padding: 20px;
   border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 10px;
+/* Formulários */
+.form-group { margin-bottom: 15px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+input {
+  width: 100%; padding: 10px;
+  border: 1px solid #cbd5e1; border-radius: 6px;
+  box-sizing: border-box; margin-top: 5px;
+}
+.btn-primary {
+  width: 100%; background: var(--primary); color: white;
+  border: none; padding: 12px; border-radius: 6px;
+  font-weight: bold; cursor: pointer; margin-top: 10px;
 }
 
-.modal-header h3 { margin: 0; color: #334155; }
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
+/* Tabelas */
+.table-responsive { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+.btn-icon {
+  background: none; border: none; cursor: pointer; font-size: 1.2rem; margin-right: 10px;
 }
+.edit { color: #f59e0b; }
+.delete { color: #ef4444; }
 
-/* Botões da Tabela */
-.btn-small {
-  padding: 6px 10px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.75rem;
-  font-weight: bold;
-  margin-left: 5px;
-  transition: opacity 0.2s;
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; justify-content: center; align-items: center;
 }
+.modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
-.btn-edit { background-color: #f59e0b; color: white; }
-.btn-delete { background-color: #ef4444; color: white; }
-.btn-cancel { background-color: #94a3b8; color: white; }
-
-.btn-small:hover { opacity: 0.8; }
+/* --- RESPONSIVIDADE (MOBILE) --- */
+@media (max-width: 768px) {
+  .app-layout { flex-direction: column; }
+  .sidebar {
+    width: 100%; box-sizing: border-box;
+    flex-direction: row; justify-content: space-between; align-items: center;
+    padding: 10px 20px;
+  }
+  .nav-links {
+    flex-direction: row; margin: 0;
+    overflow-x: auto; gap: 15px;
+  }
+  .nav-item span { display: none; } /* Esconde texto, mostra só ícone no menu top */
+  
+  .content-grid { grid-template-columns: 1fr; } /* Empilha Form e Tabela */
+}
