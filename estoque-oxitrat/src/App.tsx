@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import './App.css';
 
+// 1. Interface corrigida para bater com as colunas do banco de dados (SQL)
 interface MateriaPrima {
   id: string;
   nome: string;
-  massa_kg: number;
+  massa: number;      // Antes era massa_kg
   densidade: number;
-  volume_litros: number;
+  volume: number;     // Antes era volume_litros
   data_entrada: string;
 }
 
@@ -21,6 +22,7 @@ function App() {
   useEffect(() => { buscarDados(); }, []);
 
   async function buscarDados() {
+    // O select vai trazer as colunas "massa" e "volume" automaticamente
     const { data } = await supabase.from('estoque').select('*').order('created_at', { ascending: false });
     if (data) setEstoque(data);
   }
@@ -33,15 +35,17 @@ function App() {
     const densidadeNum = Number(densidade);
     const volumeCalculado = massaNum / densidadeNum;
 
+    // 2. Insert corrigido enviando os nomes exatos das colunas do banco
     const { error } = await supabase.from('estoque').insert([{
       nome: nome,
-      massa_kg: massaNum,
+      massa: massaNum,        // Coluna 'massa' no banco
       densidade: densidadeNum,
-      volume_litros: volumeCalculado
+      volume: volumeCalculado // Coluna 'volume' no banco
     }]);
 
     if (error) {
       alert("Erro ao salvar: " + error.message);
+      console.error(error); // Ajuda a debugar se tiver erro de RLS ou conexão
     } else {
       setNome(''); setMassa(''); setDensidade('');
       buscarDados();
@@ -97,9 +101,12 @@ function App() {
                 {estoque.map((item) => (
                   <tr key={item.id}>
                     <td style={{fontWeight: 'bold'}}>{item.nome}</td>
-                    <td>{item.massa_kg} kg</td>
+                    {/* 3. Leitura das propriedades corrigidas */}
+                    <td>{item.massa} kg</td>
                     <td style={{textAlign: 'right'}}>
-                      <div className="volume-badge">{item.volume_litros.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} L</div>
+                      <div className="volume-badge">
+                        {item.volume.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} L
+                      </div>
                     </td>
                   </tr>
                 ))}
