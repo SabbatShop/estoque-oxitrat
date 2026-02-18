@@ -21,6 +21,7 @@ export function Estoque() {
   const [massa, setMassa] = useState<number | ''>('');
   const [densidade, setDensidade] = useState<number | ''>('');
   const [preco, setPreco] = useState<number | ''>('');
+  const [dataEntrada, setDataEntrada] = useState('');
 
   // Estados de Edição (Modal)
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,6 +30,7 @@ export function Estoque() {
   const [editMassa, setEditMassa] = useState<number | ''>('');
   const [editDensidade, setEditDensidade] = useState<number | ''>('');
   const [editPreco, setEditPreco] = useState<number | ''>('');
+  const [editDataEntrada, setEditDataEntrada] = useState('');
 
   useEffect(() => { buscarDados(); }, []);
 
@@ -41,13 +43,11 @@ export function Estoque() {
   }
 
   const handleEntrada = async () => {
-    if (!nome || !massa || !densidade || !preco) return alert("Preencha todos os campos!");
+    if (!nome || !massa || !densidade || !preco || !dataEntrada) return alert("Preencha todos os campos!");
     setLoading(true);
     
     const massaNum = Number(massa);
     const densidadeNum = Number(densidade);
-    
-    // Evitar divisão por zero
     const volumeCalc = densidadeNum > 0 ? massaNum / densidadeNum : 0;
 
     const { error } = await supabase.from('estoque').insert([{
@@ -55,13 +55,14 @@ export function Estoque() {
       massa: massaNum, 
       densidade: densidadeNum, 
       volume: volumeCalc, 
-      preco: Number(preco)
+      preco: Number(preco),
+      data_entrada: dataEntrada
     }]);
 
     if (error) {
       alert(error.message);
     } else { 
-      setNome(''); setMassa(''); setDensidade(''); setPreco(''); 
+      setNome(''); setMassa(''); setDensidade(''); setPreco(''); setDataEntrada('');
       buscarDados(); 
     }
     setLoading(false);
@@ -80,6 +81,7 @@ export function Estoque() {
     setEditMassa(item.massa);
     setEditDensidade(item.densidade);
     setEditPreco(item.preco);
+    setEditDataEntrada(item.data_entrada || '');
     setIsModalOpen(true);
   }
 
@@ -94,7 +96,8 @@ export function Estoque() {
       massa: m, 
       densidade: d, 
       volume: v, 
-      preco: Number(editPreco)
+      preco: Number(editPreco),
+      data_entrada: editDataEntrada
     }).eq('id', editId);
 
     if (!error) {
@@ -105,7 +108,12 @@ export function Estoque() {
     }
   };
 
-  // Cálculo visual do volume no modal
+  const formatarData = (dataString: string) => {
+    if (!dataString) return '--';
+    const [ano, mes, dia] = dataString.split('-');
+    return `${dia}/${mes}/${ano}`;
+  };
+
   const editVolumePreview = (Number(editMassa) > 0 && Number(editDensidade) > 0) 
     ? (Number(editMassa) / Number(editDensidade)).toFixed(2) 
     : '--';
@@ -118,7 +126,6 @@ export function Estoque() {
       </header>
       
       <div className="content-grid">
-        {/* Formulário de Adição */}
         <div className="card form-section">
           <h3><Package size={18} style={{marginRight:8}}/> Nova Entrada</h3>
           
@@ -153,14 +160,24 @@ export function Estoque() {
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Custo Total (R$)</label>
-            <input 
-              type="number" 
-              value={preco} 
-              onChange={e => setPreco(Number(e.target.value))} 
-              placeholder="0.00"
-            />
+          <div className="row-2">
+            <div className="form-group">
+              <label>Custo Total (R$)</label>
+              <input 
+                type="number" 
+                value={preco} 
+                onChange={e => setPreco(Number(e.target.value))} 
+                placeholder="0.00"
+              />
+            </div>
+            <div className="form-group">
+              <label>Data de Chegada</label>
+              <input 
+                type="date" 
+                value={dataEntrada} 
+                onChange={e => setDataEntrada(e.target.value)} 
+              />
+            </div>
           </div>
 
           <button className="btn-primary" onClick={handleEntrada} disabled={loading}>
@@ -168,7 +185,6 @@ export function Estoque() {
           </button>
         </div>
 
-        {/* Tabela de Visualização */}
         <div className="card table-section">
           <h3>Itens em Estoque</h3>
           <div className="table-responsive">
@@ -180,13 +196,15 @@ export function Estoque() {
                   <th>Densidade</th>
                   <th>Volume (L)</th>
                   <th>Custo (R$)</th>
+                  <th>Chegada</th>
                   <th style={{textAlign: 'center'}}>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {estoque.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{textAlign: 'center', color: '#999', padding: '20px'}}>
+                    {/* Alterado colSpan para 7 devido à volta da coluna Densidade */}
+                    <td colSpan={7} style={{textAlign: 'center', color: '#999', padding: '20px'}}>
                       Nenhum item cadastrado.
                     </td>
                   </tr>
@@ -200,6 +218,7 @@ export function Estoque() {
                         {item.volume?.toFixed(2)}
                       </td>
                       <td>R$ {item.preco?.toFixed(2)}</td>
+                      <td>{formatarData(item.data_entrada)}</td>
                       <td style={{display: 'flex', gap: '8px', justifyContent: 'center'}}>
                         <button className="btn-icon edit" onClick={() => openEdit(item)} title="Editar">
                           <Pencil size={18} />
@@ -217,67 +236,45 @@ export function Estoque() {
         </div>
       </div>
 
-      {/* Modal de Edição */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
             <div style={{display:'flex', justifyContent:'space-between', marginBottom:'20px'}}>
               <h3>Editar Item</h3>
-              <button 
-                onClick={() => setIsModalOpen(false)} 
-                style={{background:'none', border:'none', cursor:'pointer'}}
-              >
+              <button onClick={() => setIsModalOpen(false)} style={{background:'none', border:'none', cursor:'pointer'}}>
                 <X size={20} />
               </button>
             </div>
 
             <div className="form-group">
               <label>Nome do Material</label>
-              <input 
-                type="text" 
-                value={editNome} 
-                onChange={e => setEditNome(e.target.value)} 
-              />
+              <input type="text" value={editNome} onChange={e => setEditNome(e.target.value)} />
             </div>
 
             <div className="row-2">
               <div className="form-group">
                 <label>Massa (Kg)</label>
-                <input 
-                  type="number" 
-                  value={editMassa} 
-                  onChange={e => setEditMassa(Number(e.target.value))} 
-                />
+                <input type="number" value={editMassa} onChange={e => setEditMassa(Number(e.target.value))} />
               </div>
               <div className="form-group">
                 <label>Densidade</label>
-                <input 
-                  type="number" 
-                  value={editDensidade} 
-                  onChange={e => setEditDensidade(Number(e.target.value))} 
-                />
+                <input type="number" value={editDensidade} onChange={e => setEditDensidade(Number(e.target.value))} />
               </div>
             </div>
 
-            <div style={{
-              background: '#f0fdf4', 
-              padding: '10px', 
-              borderRadius: '8px', 
-              marginBottom: '15px',
-              color: '#166534',
-              fontSize: '0.9rem',
-              textAlign: 'center'
-            }}>
+            <div style={{ background: '#f0fdf4', padding: '10px', borderRadius: '8px', marginBottom: '15px', color: '#166534', fontSize: '0.9rem', textAlign: 'center' }}>
               Volume Recalculado: <strong>{editVolumePreview} Litros</strong>
             </div>
 
-            <div className="form-group">
-              <label>Preço de Custo (R$)</label>
-              <input 
-                type="number" 
-                value={editPreco} 
-                onChange={e => setEditPreco(Number(e.target.value))} 
-              />
+            <div className="row-2">
+              <div className="form-group">
+                <label>Preço (R$)</label>
+                <input type="number" value={editPreco} onChange={e => setEditPreco(Number(e.target.value))} />
+              </div>
+              <div className="form-group">
+                <label>Data de Chegada</label>
+                <input type="date" value={editDataEntrada} onChange={e => setEditDataEntrada(e.target.value)} />
+              </div>
             </div>
 
             <div className="modal-actions">
