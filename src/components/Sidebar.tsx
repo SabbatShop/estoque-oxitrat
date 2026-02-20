@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Users, Factory, Menu, X, Building2, PackageCheck } from 'lucide-react'; // ÍCONE ADICIONADO AQUI
+import { LayoutDashboard, Package, Users, Factory, Menu, X, Building2, PackageCheck, ShoppingCart } from 'lucide-react'; // ÍCONE ADICIONADO AQUI
 import '../App.css';
 
 export function Sidebar() {
@@ -49,6 +49,10 @@ export function Sidebar() {
             <PackageCheck size={20} /> <span>Produtos Acabados</span>
           </Link>
 
+          <Link to="/vendas" className={`nav-item ${isActive('/vendas')}`} onClick={() => setIsOpen(false)}>
+            <ShoppingCart size={20} /> <span>Vendas</span>
+          </Link>
+        
           <div className="nav-divider">Cadastros</div>
           
           <Link to="/funcionarios" className={`nav-item ${isActive('/funcionarios')}`} onClick={() => setIsOpen(false)}>

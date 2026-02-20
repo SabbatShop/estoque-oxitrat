@@ -7,7 +7,7 @@ import { Funcionarios } from './pages/Funcionarios';
 import { Clientes } from './pages/Clientes';
 import { Producao } from './pages/Producao';
 import { ProdutosAcabados } from './pages/ProdutosAcabados';
-import { Venda } from './pages/Venda';
+import { Vendas } from './pages/Vendas';
 import './App.css';
 
 function App() {
@@ -23,7 +23,7 @@ function App() {
             <Route path="/produtos-acabados" element={<ProdutosAcabados />} />
             <Route path="/funcionarios" element={<Funcionarios />} />
             <Route path="/clientes" element={<Clientes />} />
-            <Route path="/venda" element={<Venda />} />
+            <Route path="/vendas" element={<Vendas />} />
           </Routes>
         </main>
       </div>
