@@ -3,6 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './pages/Dashboard';
 import { Estoque } from './pages/Estoque';
 import { Funcionarios } from './pages/Funcionarios';
+import { Clientes } from './pages/Clientes';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/estoque" element={<Estoque />} />
             <Route path="/funcionarios" element={<Funcionarios />} />
+            <Route path="/clientes" element={<Clientes />} />
           </Routes>
         </main>
       </div>

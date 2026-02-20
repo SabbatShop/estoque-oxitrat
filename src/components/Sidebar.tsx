@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Users, Factory, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, Users, Factory, Menu, X, Building2 } from 'lucide-react';
 import '../App.css';
 
 export function Sidebar() {
@@ -45,6 +45,9 @@ export function Sidebar() {
           </Link>
           <Link to="/funcionarios" className={`nav-item ${isActive('/funcionarios')}`} onClick={() => setIsOpen(false)}>
             <Users size={20} /> <span>Funcionários</span>
+          </Link>
+          <Link to="/clientes" className={`nav-item ${isActive('/clientes')}`} onClick={() => setIsOpen(false)}>
+            <Building2 size={20} /> <span>Clientes</span>
           </Link>
           
           <div className="nav-divider">Em Breve</div>
