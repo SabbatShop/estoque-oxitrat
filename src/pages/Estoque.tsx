@@ -121,7 +121,7 @@ export function Estoque() {
   return (
     <div className="page-container">
       <header className="page-header">
-        <h2>Controle de Matéria-Prima</h2>
+        <h2>Estoque de Matéria-Prima</h2>
         <p>Gerencie o estoque, densidade e custos.</p>
       </header>
       
