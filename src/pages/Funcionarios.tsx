@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Users, Pencil, Trash2, X, CheckCircle, XCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface Funcionario {
   id: string;
@@ -42,7 +43,8 @@ export function Funcionarios() {
 
   const handleEntrada = async () => {
     if (!nome || !cargo || !salario || !dataAdmissao) {
-      return alert("Preencha todos os campos!");
+      toast.error("Preencha todos os campos!");
+      return;
     }
     setLoading(true);
 
@@ -55,9 +57,10 @@ export function Funcionarios() {
     }]);
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
     } else { 
       setNome(''); setCargo(''); setSalario(''); setDataAdmissao(''); 
+      toast.success("Funcionário cadastrado!");
       buscarDados(); 
     }
     setLoading(false);
@@ -66,6 +69,7 @@ export function Funcionarios() {
   const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir este funcionário?")) {
       await supabase.from('funcionarios').delete().eq('id', id);
+      toast.success("Funcionário removido do sistema!");
       buscarDados();
     }
   };
@@ -93,9 +97,10 @@ export function Funcionarios() {
 
     if (!error) {
       setIsModalOpen(false);
+      toast.success("Dados do funcionário atualizados!");
       buscarDados();
     } else {
-      alert("Erro ao atualizar: " + error.message);
+      toast.error("Erro ao atualizar: " + error.message);
     }
   };
 

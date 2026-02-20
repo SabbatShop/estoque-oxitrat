@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast'; 
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './pages/Dashboard';
 import { Estoque } from './pages/Estoque';
@@ -24,6 +25,9 @@ function App() {
           </Routes>
         </main>
       </div>
+      
+      {/* Configure a posição das notificações (ex: canto superior direito) */}
+      <Toaster position="top-right" reverseOrder={false} />
     </Router>
   );
 }

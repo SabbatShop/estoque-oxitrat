@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Building2, Pencil, Trash2, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface Cliente {
   id: string;
@@ -37,7 +38,8 @@ export function Clientes() {
 
   const handleCadastrar = async () => {
     if (!nomeEmpresa || !endereco || !telefone) {
-      return alert("Preencha todos os campos!");
+      toast.error("Preencha todos os campos!");
+      return;
     }
     setLoading(true);
 
@@ -48,9 +50,10 @@ export function Clientes() {
     }]);
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
     } else { 
       setNomeEmpresa(''); setEndereco(''); setTelefone(''); 
+      toast.success("Cliente cadastrado com sucesso!");
       buscarDados(); 
     }
     setLoading(false);
@@ -59,6 +62,7 @@ export function Clientes() {
   const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir este cliente?")) {
       await supabase.from('clientes').delete().eq('id', id);
+      toast.success("Cliente removido com sucesso!");
       buscarDados();
     }
   };
@@ -82,9 +86,10 @@ export function Clientes() {
 
     if (!error) {
       setIsModalOpen(false);
+      toast.success("Dados do cliente atualizados!");
       buscarDados();
     } else {
-      alert("Erro ao atualizar: " + error.message);
+      toast.error("Erro ao atualizar: " + error.message);
     }
   };
 

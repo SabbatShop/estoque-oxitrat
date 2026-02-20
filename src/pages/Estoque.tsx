@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Package, Pencil, Trash2, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface MateriaPrima {
   id: string;
@@ -43,7 +44,10 @@ export function Estoque() {
   }
 
   const handleEntrada = async () => {
-    if (!nome || !massa || !densidade || !preco || !dataEntrada) return alert("Preencha todos os campos!");
+    if (!nome || !massa || !densidade || !preco || !dataEntrada) {
+      toast.error("Preencha todos os campos!");
+      return;
+    }
     setLoading(true);
     
     const massaNum = Number(massa);
@@ -60,9 +64,10 @@ export function Estoque() {
     }]);
 
     if (error) {
-      alert(error.message);
+      toast.error("Erro ao salvar: " + error.message);
     } else { 
       setNome(''); setMassa(''); setDensidade(''); setPreco(''); setDataEntrada('');
+      toast.success("Item adicionado ao estoque!");
       buscarDados(); 
     }
     setLoading(false);
@@ -71,6 +76,7 @@ export function Estoque() {
   const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir este item?")) {
       await supabase.from('estoque').delete().eq('id', id);
+      toast.success("Item removido com sucesso!");
       buscarDados();
     }
   };
@@ -102,9 +108,10 @@ export function Estoque() {
 
     if (!error) {
       setIsModalOpen(false);
+      toast.success("Item atualizado com sucesso!");
       buscarDados();
     } else {
-      alert("Erro ao atualizar: " + error.message);
+      toast.error("Erro ao atualizar: " + error.message);
     }
   };
 
@@ -203,7 +210,6 @@ export function Estoque() {
               <tbody>
                 {estoque.length === 0 ? (
                   <tr>
-                    {/* Alterado colSpan para 7 devido à volta da coluna Densidade */}
                     <td colSpan={7} style={{textAlign: 'center', color: '#999', padding: '20px'}}>
                       Nenhum item cadastrado.
                     </td>

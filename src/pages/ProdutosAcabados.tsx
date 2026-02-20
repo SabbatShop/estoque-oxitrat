@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { PackageCheck, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface ProdutoAcabado {
   id: string;
@@ -33,6 +34,7 @@ export function ProdutosAcabados() {
   const handleDelete = async (id: string) => {
     if (confirm("Deseja excluir este registo? (Isto não devolverá as matérias-primas ao estoque M.P.)")) {
       await supabase.from('produtos_acabados').delete().eq('id', id);
+      toast.success("Registro excluído com sucesso!");
       buscarDados();
     }
   };

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Factory, Plus, Trash2, ArrowRight } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface MateriaPrima {
   id: string;
@@ -71,20 +72,29 @@ export function Producao() {
   const densidadeFinal = totais.volume > 0 ? totais.massa / totais.volume : 0;
 
   const handleProduzir = async () => {
-    if (!nomeMistura) return alert("Dê um nome para a mistura!");
-    if (ingredientes.length === 0) return alert("Adicione pelo menos um ingrediente!");
+    if (!nomeMistura) {
+      toast.error("Dê um nome para a mistura!");
+      return;
+    }
+    if (ingredientes.length === 0) {
+      toast.error("Adicione pelo menos um ingrediente!");
+      return;
+    }
     
     // Validação de estoque e preenchimento
     for (const ing of ingredientes) {
       if (!ing.estoque_id || !ing.litros || Number(ing.litros) <= 0) {
-        return alert("Preencha todos os campos dos ingredientes corretamente.");
+        toast.error("Preencha todos os campos dos ingredientes corretamente.");
+        return;
       }
       const mp = estoqueMP.find(item => item.id === ing.estoque_id);
       if (mp && Number(ing.litros) > mp.volume) {
-        return alert(`Estoque insuficiente para a matéria-prima: ${mp.nome}. Disponível: ${mp.volume.toFixed(2)}L`);
+        toast.error(`Estoque insuficiente para a matéria-prima: ${mp.nome}. Disponível: ${mp.volume.toFixed(2)}L`);
+        return;
       }
     }
 
+    const toastId = toast.loading('Processando produção...');
     setLoading(true);
 
     try {
@@ -113,12 +123,12 @@ export function Producao() {
         }).eq('id', mp.id);
       }
 
-      alert("Produção finalizada e estoque atualizado com sucesso!");
+      toast.success("Produção finalizada e estoque atualizado com sucesso!", { id: toastId });
       setNomeMistura('');
       setIngredientes([]);
       buscarDados(); // Recarrega o estoque de M.P. no select
     } catch (error: any) {
-      alert("Erro ao produzir: " + error.message);
+      toast.error("Erro ao produzir: " + error.message, { id: toastId });
     } finally {
       setLoading(false);
     }
