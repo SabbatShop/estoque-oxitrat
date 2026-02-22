@@ -178,21 +178,21 @@ export function Dashboard() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
               
               <div style={{ textAlign: 'center', flex: 1 }}>
-                <span style={{ display: 'block', fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Histórico Produzido</span>
+                <span style={{ display: 'block', fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Produto Acabado Produzido</span>
                 <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>{balanco.producao.toFixed(2)} KG</span>
               </div>
               
               <div style={{ fontSize: '1.5rem', color: '#94a3b8', fontWeight: 'bold' }}>-</div>
               
               <div style={{ textAlign: 'center', flex: 1 }}>
-                <span style={{ display: 'block', fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Histórico Vendido</span>
+                <span style={{ display: 'block', fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Total de produto Vendido</span>
                 <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>{balanco.vendasTotais.toFixed(2)} KG</span>
               </div>
 
               <div style={{ fontSize: '1.5rem', color: '#94a3b8', fontWeight: 'bold' }}>=</div>
 
               <div style={{ textAlign: 'center', flex: 1, background: '#f0fdf4', padding: '15px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-                <span style={{ display: 'block', fontSize: '0.85rem', color: '#166534', textTransform: 'uppercase', fontWeight: 'bold' }}>Estoque do Sistema</span>
+                <span style={{ display: 'block', fontSize: '0.85rem', color: '#166534', textTransform: 'uppercase', fontWeight: 'bold' }}>Estoque de produto Acabado</span>
                 <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#15803d' }}>{balanco.estoquePA.toFixed(2)} KG</span>
               </div>
 
