@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 
 interface ProdutoAcabado {
   id: string;
+  codigo: string;
   nome: string;
   massa_total: number;
   volume_total: number;
@@ -57,6 +58,7 @@ export function ProdutosAcabados() {
               <table>
                 <thead>
                   <tr>
+                    <th>Código</th>
                     <th>Produto</th>
                     <th>Massa Total (kg)</th>
                     <th>Volume Total (L)</th>
@@ -68,14 +70,15 @@ export function ProdutosAcabados() {
                 <tbody>
                   {produtos.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{textAlign: 'center', color: '#999', padding: '20px'}}>
+                      <td colSpan={7} style={{textAlign: 'center', color: '#999', padding: '20px'}}>
                         Nenhum produto acabado no estoque.
                       </td>
                     </tr>
                   ) : (
                     produtos.map(item => (
                       <tr key={item.id}>
-                        <td><strong>{item.nome}</strong></td>
+                        <td><strong>{item.codigo}</strong></td>
+                        <td>{item.nome}</td>
                         <td>{item.massa_total?.toFixed(2)} kg</td>
                         <td style={{color: '#1d4ed8', fontWeight: 'bold'}}>{item.volume_total?.toFixed(2)} L</td>
                         <td>{item.densidade_final?.toFixed(3)}</td>

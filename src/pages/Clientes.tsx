@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 
 interface Cliente {
   id: string;
+  codigo: string;
+  cnpj: string;
   nome_empresa: string;
   endereco: string;
   telefone: string;
@@ -15,6 +17,8 @@ export function Clientes() {
   const [loading, setLoading] = useState(false);
 
   // Estados do Formulário de Criação
+  const [codigo, setCodigo] = useState('');
+  const [cnpj, setCnpj] = useState('');
   const [nomeEmpresa, setNomeEmpresa] = useState('');
   const [endereco, setEndereco] = useState('');
   const [telefone, setTelefone] = useState('');
@@ -22,6 +26,8 @@ export function Clientes() {
   // Estados de Edição (Modal)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [editCodigo, setEditCodigo] = useState('');
+  const [editCnpj, setEditCnpj] = useState('');
   const [editNomeEmpresa, setEditNomeEmpresa] = useState('');
   const [editEndereco, setEditEndereco] = useState('');
   const [editTelefone, setEditTelefone] = useState('');
@@ -37,13 +43,15 @@ export function Clientes() {
   }
 
   const handleCadastrar = async () => {
-    if (!nomeEmpresa || !endereco || !telefone) {
+    if (!codigo || !cnpj || !nomeEmpresa || !endereco || !telefone) {
       toast.error("Preencha todos os campos!");
       return;
     }
     setLoading(true);
 
     const { error } = await supabase.from('clientes').insert([{
+      codigo,
+      cnpj,
       nome_empresa: nomeEmpresa, 
       endereco, 
       telefone
@@ -52,7 +60,7 @@ export function Clientes() {
     if (error) {
       toast.error(error.message);
     } else { 
-      setNomeEmpresa(''); setEndereco(''); setTelefone(''); 
+      setCodigo(''); setCnpj(''); setNomeEmpresa(''); setEndereco(''); setTelefone(''); 
       toast.success("Cliente cadastrado com sucesso!");
       buscarDados(); 
     }
@@ -69,6 +77,8 @@ export function Clientes() {
 
   const openEdit = (item: Cliente) => {
     setEditId(item.id);
+    setEditCodigo(item.codigo || '');
+    setEditCnpj(item.cnpj || '');
     setEditNomeEmpresa(item.nome_empresa);
     setEditEndereco(item.endereco);
     setEditTelefone(item.telefone);
@@ -79,6 +89,8 @@ export function Clientes() {
     if (!editId) return;
     
     const { error } = await supabase.from('clientes').update({
+      codigo: editCodigo,
+      cnpj: editCnpj,
       nome_empresa: editNomeEmpresa, 
       endereco: editEndereco, 
       telefone: editTelefone
@@ -105,6 +117,27 @@ export function Clientes() {
         <div className="card form-section">
           <h3><Building2 size={18} style={{marginRight:8}}/> Novo Cliente</h3>
           
+          <div className="row-2">
+            <div className="form-group">
+              <label>Código do Cliente</label>
+              <input 
+                type="text" 
+                value={codigo} 
+                onChange={e => setCodigo(e.target.value)} 
+                placeholder="Ex: CLI-001" 
+              />
+            </div>
+            <div className="form-group">
+              <label>CNPJ</label>
+              <input 
+                type="text" 
+                value={cnpj} 
+                onChange={e => setCnpj(e.target.value)} 
+                placeholder="00.000.000/0000-00" 
+              />
+            </div>
+          </div>
+
           <div className="form-group">
             <label>Nome da Empresa</label>
             <input 
@@ -147,7 +180,9 @@ export function Clientes() {
             <table>
               <thead>
                 <tr>
+                  <th>Código</th>
                   <th>Empresa</th>
+                  <th>CNPJ</th>
                   <th>Endereço</th>
                   <th>Telefone</th>
                   <th style={{textAlign: 'center'}}>Ações</th>
@@ -156,14 +191,16 @@ export function Clientes() {
               <tbody>
                 {clientes.length === 0 ? (
                   <tr>
-                    <td colSpan={4} style={{textAlign: 'center', color: '#999', padding: '20px'}}>
+                    <td colSpan={6} style={{textAlign: 'center', color: '#999', padding: '20px'}}>
                       Nenhum cliente cadastrado.
                     </td>
                   </tr>
                 ) : (
                   clientes.map(item => (
                     <tr key={item.id}>
-                      <td><strong>{item.nome_empresa}</strong></td>
+                      <td><strong>{item.codigo}</strong></td>
+                      <td>{item.nome_empresa}</td>
+                      <td>{item.cnpj}</td>
                       <td>{item.endereco}</td>
                       <td>{item.telefone}</td>
                       <td style={{display: 'flex', gap: '8px', justifyContent: 'center'}}>
@@ -195,6 +232,25 @@ export function Clientes() {
               >
                 <X size={20} />
               </button>
+            </div>
+
+            <div className="row-2">
+              <div className="form-group">
+                <label>Código do Cliente</label>
+                <input 
+                  type="text" 
+                  value={editCodigo} 
+                  onChange={e => setEditCodigo(e.target.value)} 
+                />
+              </div>
+              <div className="form-group">
+                <label>CNPJ</label>
+                <input 
+                  type="text" 
+                  value={editCnpj} 
+                  onChange={e => setEditCnpj(e.target.value)} 
+                />
+              </div>
             </div>
 
             <div className="form-group">

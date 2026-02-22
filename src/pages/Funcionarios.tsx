@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 
 interface Funcionario {
   id: string;
+  codigo: string;
   nome: string;
   cargo: string;
   salario: number;
@@ -17,6 +18,7 @@ export function Funcionarios() {
   const [loading, setLoading] = useState(false);
 
   // Estados do Formulário de Criação
+  const [codigo, setCodigo] = useState('');
   const [nome, setNome] = useState('');
   const [cargo, setCargo] = useState('');
   const [salario, setSalario] = useState<number | ''>('');
@@ -25,6 +27,7 @@ export function Funcionarios() {
   // Estados de Edição (Modal)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [editCodigo, setEditCodigo] = useState('');
   const [editNome, setEditNome] = useState('');
   const [editCargo, setEditCargo] = useState('');
   const [editSalario, setEditSalario] = useState<number | ''>('');
@@ -42,13 +45,14 @@ export function Funcionarios() {
   }
 
   const handleEntrada = async () => {
-    if (!nome || !cargo || !salario || !dataAdmissao) {
+    if (!codigo || !nome || !cargo || !salario || !dataAdmissao) {
       toast.error("Preencha todos os campos!");
       return;
     }
     setLoading(true);
 
     const { error } = await supabase.from('funcionarios').insert([{
+      codigo,
       nome, 
       cargo, 
       salario: Number(salario), 
@@ -59,7 +63,7 @@ export function Funcionarios() {
     if (error) {
       toast.error(error.message);
     } else { 
-      setNome(''); setCargo(''); setSalario(''); setDataAdmissao(''); 
+      setCodigo(''); setNome(''); setCargo(''); setSalario(''); setDataAdmissao(''); 
       toast.success("Funcionário cadastrado!");
       buscarDados(); 
     }
@@ -76,6 +80,7 @@ export function Funcionarios() {
 
   const openEdit = (item: Funcionario) => {
     setEditId(item.id);
+    setEditCodigo(item.codigo || '');
     setEditNome(item.nome);
     setEditCargo(item.cargo);
     setEditSalario(item.salario);
@@ -88,6 +93,7 @@ export function Funcionarios() {
     if (!editId) return;
     
     const { error } = await supabase.from('funcionarios').update({
+      codigo: editCodigo,
       nome: editNome, 
       cargo: editCargo, 
       salario: Number(editSalario), 
@@ -104,7 +110,6 @@ export function Funcionarios() {
     }
   };
 
-  // Função utilitária para formatar a data (YYYY-MM-DD para DD/MM/YYYY)
   const formatarData = (dataString: string) => {
     if (!dataString) return '--';
     const [ano, mes, dia] = dataString.split('-');
@@ -119,10 +124,19 @@ export function Funcionarios() {
       </header>
       
       <div className="content-grid">
-        {/* Formulário de Adição */}
         <div className="card form-section">
           <h3><Users size={18} style={{marginRight:8}}/> Novo Funcionário</h3>
           
+          <div className="form-group">
+            <label>Código do Funcionário</label>
+            <input 
+              type="text" 
+              value={codigo} 
+              onChange={e => setCodigo(e.target.value)} 
+              placeholder="Ex: FUNC-001" 
+            />
+          </div>
+
           <div className="form-group">
             <label>Nome Completo</label>
             <input 
@@ -168,13 +182,13 @@ export function Funcionarios() {
           </button>
         </div>
 
-        {/* Tabela de Visualização */}
         <div className="card table-section">
           <h3>Equipe</h3>
           <div className="table-responsive">
             <table>
               <thead>
                 <tr>
+                  <th>Código</th>
                   <th>Nome</th>
                   <th>Cargo</th>
                   <th>Salário</th>
@@ -186,14 +200,15 @@ export function Funcionarios() {
               <tbody>
                 {funcionarios.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{textAlign: 'center', color: '#999', padding: '20px'}}>
+                    <td colSpan={7} style={{textAlign: 'center', color: '#999', padding: '20px'}}>
                       Nenhum funcionário cadastrado.
                     </td>
                   </tr>
                 ) : (
                   funcionarios.map(item => (
                     <tr key={item.id}>
-                      <td><strong>{item.nome}</strong></td>
+                      <td><strong>{item.codigo}</strong></td>
+                      <td>{item.nome}</td>
                       <td>{item.cargo}</td>
                       <td>R$ {item.salario?.toFixed(2)}</td>
                       <td>{formatarData(item.data_admissao)}</td>
@@ -225,7 +240,6 @@ export function Funcionarios() {
         </div>
       </div>
 
-      {/* Modal de Edição */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -237,6 +251,15 @@ export function Funcionarios() {
               >
                 <X size={20} />
               </button>
+            </div>
+
+            <div className="form-group">
+              <label>Código do Funcionário</label>
+              <input 
+                type="text" 
+                value={editCodigo} 
+                onChange={e => setEditCodigo(e.target.value)} 
+              />
             </div>
 
             <div className="form-group">

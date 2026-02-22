@@ -22,6 +22,7 @@ export function Producao() {
   const [loading, setLoading] = useState(false);
 
   // Estados do Formulário de Produção
+  const [codigoProduto, setCodigoProduto] = useState('');
   const [nomeMistura, setNomeMistura] = useState('');
   const [ingredientes, setIngredientes] = useState<Ingrediente[]>([]);
 
@@ -54,7 +55,6 @@ export function Producao() {
     ));
   };
 
-  // Cálculos em tempo real
   const totais = ingredientes.reduce(
     (acc, ing) => {
       const mp = estoqueMP.find(item => item.id === ing.estoque_id);
@@ -72,8 +72,8 @@ export function Producao() {
   const densidadeFinal = totais.volume > 0 ? totais.massa / totais.volume : 0;
 
   const handleProduzir = async () => {
-    if (!nomeMistura) {
-      toast.error("Dê um nome para a mistura!");
+    if (!codigoProduto || !nomeMistura) {
+      toast.error("Preencha o Código e Nome da mistura!");
       return;
     }
     if (ingredientes.length === 0) {
@@ -81,7 +81,6 @@ export function Producao() {
       return;
     }
     
-    // Validação de estoque e preenchimento
     for (const ing of ingredientes) {
       if (!ing.estoque_id || !ing.litros || Number(ing.litros) <= 0) {
         toast.error("Preencha todos os campos dos ingredientes corretamente.");
@@ -98,8 +97,9 @@ export function Producao() {
     setLoading(true);
 
     try {
-      // 1. Salvar o Produto Acabado
+      // 1. Salvar o Produto Acabado com o Código
       const { error: erroProd } = await supabase.from('produtos_acabados').insert([{
+        codigo: codigoProduto,
         nome: nomeMistura,
         massa_total: totais.massa,
         volume_total: totais.volume,
@@ -123,10 +123,11 @@ export function Producao() {
         }).eq('id', mp.id);
       }
 
-      toast.success("Produção finalizada e estoque atualizado com sucesso!", { id: toastId });
+      toast.success("Produção finalizada com sucesso!", { id: toastId });
+      setCodigoProduto('');
       setNomeMistura('');
       setIngredientes([]);
-      buscarDados(); // Recarrega o estoque de M.P. no select
+      buscarDados();
     } catch (error: any) {
       toast.error("Erro ao produzir: " + error.message, { id: toastId });
     } finally {
@@ -145,15 +146,27 @@ export function Producao() {
         <div className="card form-section" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
           <h3><Factory size={18} style={{marginRight:8}}/> Nova Fórmula de Produção</h3>
           
-          <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label>Nome do Produto Acabado</label>
-            <input 
-              type="text" 
-              value={nomeMistura} 
-              onChange={e => setNomeMistura(e.target.value)} 
-              placeholder="Ex: Desengraxante Industrial 5L" 
-              style={{ fontSize: '1.1rem', padding: '12px' }}
-            />
+          <div className="row-2" style={{ marginBottom: '20px' }}>
+            <div className="form-group">
+              <label>Código do Produto</label>
+              <input 
+                type="text" 
+                value={codigoProduto} 
+                onChange={e => setCodigoProduto(e.target.value)} 
+                placeholder="Ex: PROD-001" 
+                style={{ padding: '12px' }}
+              />
+            </div>
+            <div className="form-group">
+              <label>Nome do Produto Acabado</label>
+              <input 
+                type="text" 
+                value={nomeMistura} 
+                onChange={e => setNomeMistura(e.target.value)} 
+                placeholder="Ex: Desengraxante Industrial 5L" 
+                style={{ padding: '12px' }}
+              />
+            </div>
           </div>
 
           <div style={{ borderTop: '1px solid #eee', paddingTop: '20px', marginBottom: '20px' }}>
