@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { DollarSign, Package, ShoppingCart, Scale, AlertTriangle } from 'lucide-react';
+import { DollarSign, Package, ShoppingCart, Scale, AlertTriangle, TrendingUp } from 'lucide-react';
 
 export function Dashboard() {
   const dataAtual = new Date();
@@ -10,6 +10,7 @@ export function Dashboard() {
   const [gastoMP, setGastoMP] = useState(0);
   const [custoFolha, setCustoFolha] = useState(0);
   const [kgVendidos, setKgVendidos] = useState(0);
+  const [valorVendasMes, setValorVendasMes] = useState(0); // Novo estado para o valor em R$
   
   // Estados para a Auditoria / Balanço do Chefe
   const [balanco, setBalanco] = useState({ producao: 0, vendasTotais: 0, estoquePA: 0 });
@@ -63,25 +64,29 @@ export function Dashboard() {
     }
     setCustoFolha(somaFolha);
 
-    // 3. Vendas do Mês
-    const { data: vendasData } = await supabase.from('vendas').select('quantidade_kg, created_at');
+    // 3. Vendas do Mês (Quantidade e Valor)
+    const { data: vendasData } = await supabase.from('vendas').select('quantidade_kg, valor_venda, created_at');
     let somaKgMes = 0;
-    let somaKgTotal = 0; // Para o balanço
+    let somaValorMes = 0; // Para somar o dinheiro
+    let somaKgTotal = 0; // Para o balanço geral
     
     if (vendasData) {
       vendasData.forEach(venda => {
         const peso = Number(venda.quantidade_kg) || 0;
+        const valor = Number(venda.valor_venda) || 0;
         somaKgTotal += peso; // Soma todas as vendas da história
         
         if (venda.created_at) {
           const [anoVenda, mesVenda] = venda.created_at.split('-');
           if (parseInt(mesVenda) === mes && parseInt(anoVenda) === ano) {
             somaKgMes += peso;
+            somaValorMes += valor; // Soma o dinheiro se for do mês/ano filtrado
           }
         }
       });
     }
     setKgVendidos(somaKgMes);
+    setValorVendasMes(somaValorMes);
 
     // 4. BALANÇO DE MASSA (O cálculo que o chefe pediu)
     // Pega tudo que tem no estoque de P.A. hoje
@@ -129,13 +134,14 @@ export function Dashboard() {
         <p style={{ color: '#666' }}>A carregar dados...</p>
       ) : (
         <>
-          <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+          <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+            
             <div className="card summary-card" style={{ padding: '24px', borderLeft: '4px solid #f59e0b' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <h3 style={{ margin: 0, color: '#475569', fontSize: '1rem' }}>Gasto Matéria-Prima</h3>
                 <Package size={20} color="#f59e0b" />
               </div>
-              <p style={{ fontSize: '2rem', margin: '0 0 5px 0', fontWeight: 'bold', color: '#1e293b' }}>
+              <p style={{ fontSize: '1.8rem', margin: '0 0 5px 0', fontWeight: 'bold', color: '#1e293b' }}>
                 R$ {gastoMP.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
               <span style={{ fontSize: '0.85rem', color: '#64748b' }}>No mês selecionado</span>
@@ -146,7 +152,7 @@ export function Dashboard() {
                 <h3 style={{ margin: 0, color: '#475569', fontSize: '1rem' }}>Custo com Folha</h3>
                 <DollarSign size={20} color="#16a34a" />
               </div>
-              <p style={{ fontSize: '2rem', margin: '0 0 5px 0', fontWeight: 'bold', color: '#1e293b' }}>
+              <p style={{ fontSize: '1.8rem', margin: '0 0 5px 0', fontWeight: 'bold', color: '#1e293b' }}>
                 R$ {custoFolha.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
               <span style={{ fontSize: '0.85rem', color: '#64748b' }}>No mês selecionado</span>
@@ -154,14 +160,27 @@ export function Dashboard() {
 
             <div className="card summary-card" style={{ padding: '24px', borderLeft: '4px solid #3b82f6' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <h3 style={{ margin: 0, color: '#475569', fontSize: '1rem' }}>Vendas do Mês</h3>
+                <h3 style={{ margin: 0, color: '#475569', fontSize: '1rem' }}>Volume Vendido</h3>
                 <ShoppingCart size={20} color="#3b82f6" />
               </div>
-              <p style={{ fontSize: '2rem', margin: '0 0 5px 0', fontWeight: 'bold', color: '#1e293b' }}>
+              <p style={{ fontSize: '1.8rem', margin: '0 0 5px 0', fontWeight: 'bold', color: '#1e293b' }}>
                 {kgVendidos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG
               </p>
               <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Produtos que saíram no mês</span>
             </div>
+
+            {/* NOVO CARD: Receita de Vendas */}
+            <div className="card summary-card" style={{ padding: '24px', borderLeft: '4px solid #8b5cf6' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h3 style={{ margin: 0, color: '#475569', fontSize: '1rem' }}>Receita de Vendas</h3>
+                <TrendingUp size={20} color="#8b5cf6" />
+              </div>
+              <p style={{ fontSize: '1.8rem', margin: '0 0 5px 0', fontWeight: 'bold', color: '#1e293b' }}>
+                R$ {valorVendasMes.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+              <span style={{ fontSize: '0.85rem', color: '#64748b' }}>No mês selecionado</span>
+            </div>
+
           </div>
 
           {/* PAINEL DE AUDITORIA DO CHEFE */}
