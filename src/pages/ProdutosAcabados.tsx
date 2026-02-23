@@ -79,9 +79,9 @@ export function ProdutosAcabados() {
                       <tr key={item.id}>
                         <td><strong>{item.codigo}</strong></td>
                         <td>{item.nome}</td>
-                        <td>{item.massa_total?.toFixed(2)} kg</td>
-                        <td style={{color: '#1d4ed8', fontWeight: 'bold'}}>{item.volume_total?.toFixed(2)} L</td>
-                        <td>{item.densidade_final?.toFixed(3)}</td>
+                        <td>{item.massa_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</td>
+                        <td style={{color: '#1d4ed8', fontWeight: 'bold'}}>{item.volume_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} L</td>
+                        <td>{item.densidade_final?.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td>
                         <td>{new Date(item.created_at).toLocaleDateString('pt-PT')}</td>
                         <td style={{display: 'flex', gap: '8px', justifyContent: 'center'}}>
                           <button className="btn-icon delete" onClick={() => handleDelete(item.id)} title="Excluir Registo">

@@ -122,7 +122,7 @@ export function Estoque() {
   };
 
   const editVolumePreview = (Number(editMassa) > 0 && Number(editDensidade) > 0) 
-    ? (Number(editMassa) / Number(editDensidade)).toFixed(2) 
+    ? (Number(editMassa) / Number(editDensidade)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
     : '--';
 
   return (
@@ -162,7 +162,7 @@ export function Estoque() {
                 type="number" 
                 value={densidade} 
                 onChange={e => setDensidade(Number(e.target.value))} 
-                placeholder="0.00"
+                placeholder="0.000"
               />
             </div>
           </div>
@@ -218,12 +218,12 @@ export function Estoque() {
                   estoque.map(item => (
                     <tr key={item.id}>
                       <td><strong>{item.nome}</strong></td>
-                      <td>{item.massa}</td>
-                      <td>{item.densidade}</td>
+                      <td>{item.massa?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td>{item.densidade?.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td>
                       <td style={{color: '#16a34a', fontWeight: 'bold'}}>
-                        {item.volume?.toFixed(2)}
+                        {item.volume?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
-                      <td>R$ {item.preco?.toFixed(2)}</td>
+                      <td>R$ {item.preco?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       <td>{formatarData(item.data_entrada)}</td>
                       <td style={{display: 'flex', gap: '8px', justifyContent: 'center'}}>
                         <button className="btn-icon edit" onClick={() => openEdit(item)} title="Editar">

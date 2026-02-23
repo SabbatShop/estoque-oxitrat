@@ -179,28 +179,28 @@ export function Dashboard() {
               
               <div style={{ textAlign: 'center', flex: 1 }}>
                 <span style={{ display: 'block', fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Produto Acabado Produzido</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>{balanco.producao.toFixed(2)} KG</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>{balanco.producao.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG</span>
               </div>
               
               <div style={{ fontSize: '1.5rem', color: '#94a3b8', fontWeight: 'bold' }}>-</div>
               
               <div style={{ textAlign: 'center', flex: 1 }}>
                 <span style={{ display: 'block', fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Total de produto Vendido</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>{balanco.vendasTotais.toFixed(2)} KG</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>{balanco.vendasTotais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG</span>
               </div>
 
               <div style={{ fontSize: '1.5rem', color: '#94a3b8', fontWeight: 'bold' }}>=</div>
 
               <div style={{ textAlign: 'center', flex: 1, background: '#f0fdf4', padding: '15px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
                 <span style={{ display: 'block', fontSize: '0.85rem', color: '#166534', textTransform: 'uppercase', fontWeight: 'bold' }}>Estoque de produto Acabado</span>
-                <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#15803d' }}>{balanco.estoquePA.toFixed(2)} KG</span>
+                <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#15803d' }}>{balanco.estoquePA.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG</span>
               </div>
 
             </div>
 
             <div style={{ marginTop: '15px', display: 'flex', alignItems: 'flex-start', gap: '8px', color: '#b45309', background: '#fffbeb', padding: '12px', borderRadius: '6px', border: '1px solid #fde68a', fontSize: '0.85rem' }}>
               <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-              <p style={{ margin: 0 }}>Se o estoque físico no galpão for <strong>menor</strong> que {balanco.estoquePA.toFixed(2)} KG, a diferença é a <strong>perda de produto</strong>.</p>
+              <p style={{ margin: 0 }}>Se o estoque físico no galpão for <strong>menor</strong> que {balanco.estoquePA.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG, a diferença é a <strong>perda de produto</strong>.</p>
             </div>
           </div>
         </>

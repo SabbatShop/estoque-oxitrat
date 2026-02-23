@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { ShoppingCart, ArrowDownRight, PackageCheck, Building2 } from 'lucide-react';
+import { ShoppingCart, ArrowDownRight, PackageCheck, Building2, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Cliente {
@@ -20,6 +20,7 @@ interface Venda {
   id: string;
   created_at: string;
   quantidade_kg: number;
+  valor_venda: number;
   clientes: { nome_empresa: string };
   produtos_acabados: { nome: string };
 }
@@ -34,6 +35,7 @@ export function Vendas() {
   const [clienteId, setClienteId] = useState('');
   const [produtoId, setProdutoId] = useState('');
   const [quantidadeKg, setQuantidadeKg] = useState<number | ''>('');
+  const [valorVenda, setValorVenda] = useState<number | ''>(''); // Novo estado para o preço
 
   useEffect(() => {
     buscarDados();
@@ -48,13 +50,14 @@ export function Vendas() {
     const { data: prodData } = await supabase.from('produtos_acabados').select('*').gt('massa_total', 0).order('nome');
     if (prodData) setProdutos(prodData);
 
-    // Busca Histórico de Vendas (fazendo join para pegar os nomes)
+    // Busca Histórico de Vendas incluindo o valor_venda
     const { data: vendasData } = await supabase
       .from('vendas')
       .select(`
         id, 
         created_at, 
-        quantidade_kg, 
+        quantidade_kg,
+        valor_venda,
         clientes ( nome_empresa ), 
         produtos_acabados ( nome )
       `)
@@ -66,32 +69,34 @@ export function Vendas() {
     if (!clienteId) return toast.error("Selecione um cliente!");
     if (!produtoId) return toast.error("Selecione um produto!");
     if (!quantidadeKg || Number(quantidadeKg) <= 0) return toast.error("Digite uma quantidade válida em KG!");
+    if (!valorVenda || Number(valorVenda) <= 0) return toast.error("Digite um valor de venda válido!"); // Validação do preço
 
     const qtd = Number(quantidadeKg);
+    const valor = Number(valorVenda);
     const produtoSelecionado = produtos.find(p => p.id === produtoId);
 
     if (!produtoSelecionado) return toast.error("Produto não encontrado.");
     
     if (qtd > produtoSelecionado.massa_total) {
-      return toast.error(`Estoque insuficiente! Disponível: ${produtoSelecionado.massa_total.toFixed(2)} KG`);
+      return toast.error(`Estoque insuficiente! Disponível: ${produtoSelecionado.massa_total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG`);
     }
 
     const toastId = toast.loading('Processando venda e atualizando estoque...');
     setLoading(true);
 
     try {
-      // 1. Registra a Venda
+      // 1. Registra a Venda com o valor incluído
       const { error: erroVenda } = await supabase.from('vendas').insert([{
         cliente_id: clienteId,
         produto_id: produtoId,
-        quantidade_kg: qtd
+        quantidade_kg: qtd,
+        valor_venda: valor
       }]);
 
       if (erroVenda) throw erroVenda;
 
       // 2. Calcula os novos valores para dar baixa no estoque
       const novaMassa = produtoSelecionado.massa_total - qtd;
-      // Recalcula o volume baseado na densidade (se a massa diminui, o volume diminui proporcionalmente)
       const novoVolume = produtoSelecionado.densidade_final > 0 
         ? novaMassa / produtoSelecionado.densidade_final 
         : 0;
@@ -110,6 +115,7 @@ export function Vendas() {
       setClienteId('');
       setProdutoId('');
       setQuantidadeKg('');
+      setValorVenda(''); // Limpa o preço
       
       // Atualiza as tabelas na tela
       buscarDados();
@@ -148,20 +154,32 @@ export function Vendas() {
               <option value="">-- Escolha o Produto --</option>
               {produtos.map(prod => (
                 <option key={prod.id} value={prod.id}>
-                  {prod.nome} (Estoque: {prod.massa_total.toFixed(2)} KG)
+                  {prod.nome} (Estoque: {prod.massa_total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG)
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="form-group">
-            <label><ArrowDownRight size={14} style={{display:'inline', marginRight:4}}/> Quantidade Solicitada (KG)</label>
-            <input 
-              type="number" 
-              value={quantidadeKg} 
-              onChange={e => setQuantidadeKg(Number(e.target.value))} 
-              placeholder="0.00"
-            />
+          <div className="row-2">
+            <div className="form-group">
+              <label><ArrowDownRight size={14} style={{display:'inline', marginRight:4}}/> Quantidade Solicitada (KG)</label>
+              <input 
+                type="number" 
+                value={quantidadeKg} 
+                onChange={e => setQuantidadeKg(Number(e.target.value))} 
+                placeholder="0,00"
+              />
+            </div>
+
+            <div className="form-group">
+              <label><DollarSign size={14} style={{display:'inline', marginRight:4}}/> Valor da Venda (R$)</label>
+              <input 
+                type="number" 
+                value={valorVenda} 
+                onChange={e => setValorVenda(Number(e.target.value))} 
+                placeholder="0,00"
+              />
+            </div>
           </div>
 
           <button className="btn-primary" onClick={handleVender} disabled={loading}>
@@ -180,12 +198,13 @@ export function Vendas() {
                   <th>Cliente</th>
                   <th>Produto Vendido</th>
                   <th>Quantidade (KG)</th>
+                  <th>Valor (R$)</th>
                 </tr>
               </thead>
               <tbody>
                 {vendas.length === 0 ? (
                   <tr>
-                    <td colSpan={4} style={{textAlign: 'center', color: '#999', padding: '20px'}}>
+                    <td colSpan={5} style={{textAlign: 'center', color: '#999', padding: '20px'}}>
                       Nenhuma venda registrada ainda.
                     </td>
                   </tr>
@@ -195,7 +214,10 @@ export function Vendas() {
                       <td>{new Date(venda.created_at).toLocaleDateString('pt-BR')}</td>
                       <td><strong>{venda.clientes?.nome_empresa}</strong></td>
                       <td>{venda.produtos_acabados?.nome}</td>
-                      <td style={{color: '#ef4444', fontWeight: 'bold'}}>- {venda.quantidade_kg.toFixed(2)} KG</td>
+                      <td style={{color: '#ef4444', fontWeight: 'bold'}}>- {venda.quantidade_kg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG</td>
+                      <td style={{color: '#16a34a', fontWeight: 'bold'}}>
+                        R$ {venda.valor_venda?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0,00'}
+                      </td>
                     </tr>
                   ))
                 )}
