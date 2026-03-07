@@ -2,28 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { ShoppingCart, ArrowDownRight, PackageCheck, Building2, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-interface Cliente {
-  id: string;
-  nome_empresa: string;
-}
-
-interface ProdutoAcabado {
-  id: string;
-  nome: string;
-  massa_total: number;
-  volume_total: number;
-  densidade_final: number;
-}
-
-interface Venda {
-  id: string;
-  created_at: string;
-  quantidade_kg: number;
-  valor_venda: number;
-  clientes: { nome_empresa: string };
-  produtos_acabados: { nome: string };
-}
+import type { Cliente, ProdutoAcabado, Venda } from '../types';
 
 export function Vendas() {
   const [vendas, setVendas] = useState<Venda[]>([]);
@@ -35,22 +14,19 @@ export function Vendas() {
   const [clienteId, setClienteId] = useState('');
   const [produtoId, setProdutoId] = useState('');
   const [quantidadeKg, setQuantidadeKg] = useState<number | ''>('');
-  const [valorVenda, setValorVenda] = useState<number | ''>(''); // Novo estado para o preço
+  const [valorVenda, setValorVenda] = useState<number | ''>(''); 
 
   useEffect(() => {
     buscarDados();
   }, []);
 
   async function buscarDados() {
-    // Busca Clientes
     const { data: cliData } = await supabase.from('clientes').select('id, nome_empresa').order('nome_empresa');
     if (cliData) setClientes(cliData);
 
-    // Busca Produtos Acabados que tenham saldo no estoque
     const { data: prodData } = await supabase.from('produtos_acabados').select('*').gt('massa_total', 0).order('nome');
     if (prodData) setProdutos(prodData);
 
-    // Busca Histórico de Vendas incluindo o valor_venda
     const { data: vendasData } = await supabase
       .from('vendas')
       .select(`
@@ -62,14 +38,17 @@ export function Vendas() {
         produtos_acabados ( nome )
       `)
       .order('created_at', { ascending: false });
-    if (vendasData) setVendas(vendasData as any);
+    
+    if (vendasData) {
+      setVendas(vendasData as unknown as Venda[]);
+    }
   }
 
   const handleVender = async () => {
     if (!clienteId) return toast.error("Selecione um cliente!");
     if (!produtoId) return toast.error("Selecione um produto!");
     if (!quantidadeKg || Number(quantidadeKg) <= 0) return toast.error("Digite uma quantidade válida em KG!");
-    if (!valorVenda || Number(valorVenda) <= 0) return toast.error("Digite um valor de venda válido!"); // Validação do preço
+    if (!valorVenda || Number(valorVenda) <= 0) return toast.error("Digite um valor de venda válido!");
 
     const qtd = Number(quantidadeKg);
     const valor = Number(valorVenda);
@@ -81,43 +60,26 @@ export function Vendas() {
       return toast.error(`Estoque insuficiente! Disponível: ${produtoSelecionado.massa_total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG`);
     }
 
-    const toastId = toast.loading('Processando venda e atualizando estoque...');
+    const toastId = toast.loading('Processando venda atômica...');
     setLoading(true);
 
     try {
-      // 1. Registra a Venda com o valor incluído
-      const { error: erroVenda } = await supabase.from('vendas').insert([{
-        cliente_id: clienteId,
-        produto_id: produtoId,
-        quantidade_kg: qtd,
-        valor_venda: valor
-      }]);
+      const { error: rpcError } = await supabase.rpc('registrar_venda', {
+        p_cliente_id: clienteId,
+        p_produto_id: produtoId,
+        p_quantidade_kg: qtd,
+        p_valor_venda: valor
+      });
 
-      if (erroVenda) throw erroVenda;
-
-      // 2. Calcula os novos valores para dar baixa no estoque
-      const novaMassa = produtoSelecionado.massa_total - qtd;
-      const novoVolume = produtoSelecionado.densidade_final > 0 
-        ? novaMassa / produtoSelecionado.densidade_final 
-        : 0;
-
-      // 3. Atualiza o Produto Acabado
-      const { error: erroUpdate } = await supabase.from('produtos_acabados').update({
-        massa_total: novaMassa,
-        volume_total: novoVolume
-      }).eq('id', produtoId);
-
-      if (erroUpdate) throw erroUpdate;
+      if (rpcError) throw rpcError;
 
       toast.success("Venda registrada com sucesso!", { id: toastId });
       
-      // Limpa os campos
       setClienteId('');
       setProdutoId('');
       setQuantidadeKg('');
-      setValorVenda(''); // Limpa o preço
+      setValorVenda('');
       
-      // Atualiza as tabelas na tela
       buscarDados();
     } catch (error: any) {
       toast.error("Erro ao registrar venda: " + error.message, { id: toastId });
@@ -134,7 +96,6 @@ export function Vendas() {
       </header>
 
       <div className="content-grid">
-        {/* Formulário de Venda */}
         <div className="card form-section">
           <h3><ShoppingCart size={18} style={{marginRight:8}}/> Nova Venda</h3>
           
@@ -187,7 +148,6 @@ export function Vendas() {
           </button>
         </div>
 
-        {/* Tabela de Vendas */}
         <div className="card table-section">
           <h3>Histórico de Vendas</h3>
           <div className="table-responsive">
@@ -212,8 +172,14 @@ export function Vendas() {
                   vendas.map(venda => (
                     <tr key={venda.id}>
                       <td>{new Date(venda.created_at).toLocaleDateString('pt-BR')}</td>
-                      <td><strong>{venda.clientes?.nome_empresa}</strong></td>
-                      <td>{venda.produtos_acabados?.nome}</td>
+                      <td>
+                        <strong>
+                          {Array.isArray(venda.clientes) ? venda.clientes[0]?.nome_empresa : venda.clientes?.nome_empresa || 'N/A'}
+                        </strong>
+                      </td>
+                      <td>
+                        {Array.isArray(venda.produtos_acabados) ? venda.produtos_acabados[0]?.nome : venda.produtos_acabados?.nome || 'N/A'}
+                      </td>
                       <td style={{color: '#ef4444', fontWeight: 'bold'}}>- {venda.quantidade_kg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG</td>
                       <td style={{color: '#16a34a', fontWeight: 'bold'}}>
                         R$ {venda.valor_venda?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0,00'}
