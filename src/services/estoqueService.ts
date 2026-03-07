@@ -1,5 +1,15 @@
 import { supabase } from '../supabaseClient';
-import { MateriaPrima } from '../types';
+
+export interface MateriaPrima {
+  id: string;
+  nome: string;
+  massa: number;
+  densidade: number;
+  volume: number;
+  preco: number;
+  data_entrada: string;
+  created_at?: string;
+}
 
 export const estoqueService = {
   async getAll(): Promise<MateriaPrima[]> {

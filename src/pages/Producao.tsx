@@ -2,7 +2,20 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Factory, Plus, Trash2, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
-import type { MateriaPrima, Ingrediente } from '../types';
+
+interface MateriaPrima {
+  id: string;
+  nome: string;
+  massa: number;
+  densidade: number;
+  volume: number;
+}
+
+interface Ingrediente {
+  id_local: string;
+  estoque_id: string;
+  litros: number | '';
+}
 
 export function Producao() {
   const [estoqueMP, setEstoqueMP] = useState<MateriaPrima[]>([]);
@@ -18,15 +31,10 @@ export function Producao() {
   }, []);
 
   async function buscarDados() {
-    const { data: mpData, error } = await supabase
+    const { data: mpData } = await supabase
       .from('estoque')
       .select('id, nome, massa, densidade, volume')
       .order('nome', { ascending: true });
-    
-    if (error) {
-      toast.error("Erro ao carregar matérias-primas.");
-      return;
-    }
     if (mpData) setEstoqueMP(mpData);
   }
 
@@ -73,31 +81,47 @@ export function Producao() {
       return;
     }
     
+    for (const ing of ingredientes) {
+      if (!ing.estoque_id || !ing.litros || Number(ing.litros) <= 0) {
+        toast.error("Preencha todos os campos dos ingredientes corretamente.");
+        return;
+      }
+      const mp = estoqueMP.find(item => item.id === ing.estoque_id);
+      if (mp && Number(ing.litros) > mp.volume) {
+        toast.error(`Estoque insuficiente para a matéria-prima: ${mp.nome}. Disponível: ${mp.volume.toFixed(2)}L`);
+        return;
+      }
+    }
+
+    const toastId = toast.loading('Processando produção...');
+    setLoading(true);
+
     try {
-      const ingredientesFormatados = ingredientes.map(ing => {
-        if (!ing.estoque_id || !ing.litros || Number(ing.litros) <= 0) {
-          throw new Error("Preencha todos os campos dos ingredientes corretamente.");
-        }
-        const mp = estoqueMP.find(item => item.id === ing.estoque_id);
-        if (mp && Number(ing.litros) > mp.volume) {
-          throw new Error(`Estoque insuficiente para: ${mp.nome}. Disponível: ${mp.volume.toFixed(2)}L`);
-        }
-        return { id: ing.estoque_id, volume: Number(ing.litros) };
-      });
+      // 1. Salvar o Produto Acabado com o Código
+      const { error: erroProd } = await supabase.from('produtos_acabados').insert([{
+        codigo: codigoProduto,
+        nome: nomeMistura,
+        massa_total: totais.massa,
+        volume_total: totais.volume,
+        densidade_final: densidadeFinal
+      }]);
 
-      const toastId = toast.loading('Processando produção atômica...');
-      setLoading(true);
+      if (erroProd) throw erroProd;
 
-      const { error: rpcError } = await supabase.rpc('registrar_producao', {
-        p_codigo: codigoProduto,
-        p_nome: nomeMistura,
-        p_massa_total: totais.massa,
-        p_volume_total: totais.volume,
-        p_densidade_final: densidadeFinal,
-        p_ingredientes: ingredientesFormatados
-      });
+      // 2. Dar baixa automática no Estoque de M.P.
+      for (const ing of ingredientes) {
+        const mp = estoqueMP.find(item => item.id === ing.estoque_id)!;
+        const volumeUsado = Number(ing.litros);
+        const massaUsada = volumeUsado * mp.densidade;
 
-      if (rpcError) throw rpcError;
+        const novoVolume = mp.volume - volumeUsado;
+        const novaMassa = mp.massa - massaUsada;
+
+        await supabase.from('estoque').update({
+          volume: novoVolume,
+          massa: novaMassa
+        }).eq('id', mp.id);
+      }
 
       toast.success("Produção finalizada com sucesso!", { id: toastId });
       setCodigoProduto('');
@@ -105,7 +129,7 @@ export function Producao() {
       setIngredientes([]);
       buscarDados();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error("Erro ao produzir: " + error.message, { id: toastId });
     } finally {
       setLoading(false);
     }

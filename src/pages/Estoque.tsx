@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { estoqueService } from '../services/estoqueService';
-import type { MateriaPrima } from '../types';
+import type { MateriaPrima } from '../services/estoqueService';
 import { Package, Pencil, Trash2, X, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
