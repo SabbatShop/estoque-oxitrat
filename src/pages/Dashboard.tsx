@@ -116,13 +116,17 @@ export function Dashboard() {
           <p>Acompanhe os custos e dados da empresa por período.</p>
         </div>
         
-        <div className="filter-container" style={{ display: 'flex', gap: '12px' }}>
-          <select value={mes} onChange={e => setMes(Number(e.target.value))} className="custom-select" style={{ width: 'auto' }}>
-            {meses.map(m => <option key={m.valor} value={m.valor}>{m.nome}</option>)}
-          </select>
-          <select value={ano} onChange={e => setAno(Number(e.target.value))} className="custom-select" style={{ width: 'auto' }}>
-            {anos.map(a => <option key={a} value={a}>{a}</option>)}
-          </select>
+        <div className="filter-container">
+          <div className="custom-select-wrapper">
+            <select value={mes} onChange={e => setMes(Number(e.target.value))} className="custom-select">
+              {meses.map(m => <option key={m.valor} value={m.valor}>{m.nome}</option>)}
+            </select>
+          </div>
+          <div className="custom-select-wrapper">
+            <select value={ano} onChange={e => setAno(Number(e.target.value))} className="custom-select">
+              {anos.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
         </div>
       </header>
 
@@ -165,6 +169,7 @@ export function Dashboard() {
               <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Produtos que saíram no mês</span>
             </div>
 
+            {/* NOVO CARD: Receita de Vendas */}
             <div className="card summary-card" style={{ padding: '24px', borderLeft: '4px solid #8b5cf6' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <h3 style={{ margin: 0, color: '#475569', fontSize: '1rem' }}>Receita de Vendas</h3>
